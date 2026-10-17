@@ -7,7 +7,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { Storage } from "@google-cloud/storage";
 import { mkdir, readFile, writeFile } from "fs/promises";
-import { dirname, join, resolve } from "path";
+import { basename, dirname, isAbsolute, relative, resolve, sep } from "path";
 
 @Injectable()
 export class PhotoStorageService {
@@ -22,6 +22,42 @@ export class PhotoStorageService {
       this.s3 = new S3Client({ region: config.getOrThrow("AWS_REGION") });
     if (this.driver === "gcs") this.gcs = new Storage();
   }
+
+  private localPath(key: string) {
+    const normalizedKey = key.replace(/\\/g, "/");
+    const directoryName = basename(this.localDir);
+    const directoryMarker = `/${directoryName}/`;
+    const markerIndex = normalizedKey.lastIndexOf(directoryMarker);
+    let storageKey = normalizedKey;
+
+    if (markerIndex >= 0) {
+      storageKey = normalizedKey.slice(markerIndex + directoryMarker.length);
+    } else if (normalizedKey.startsWith(`${directoryName}/`)) {
+      storageKey = normalizedKey.slice(directoryName.length + 1);
+    }
+
+    const target = resolve(this.localDir, storageKey);
+    const relativeTarget = relative(this.localDir, target);
+    if (
+      !relativeTarget ||
+      relativeTarget === ".." ||
+      relativeTarget.startsWith(`..${sep}`) ||
+      isAbsolute(relativeTarget)
+    ) {
+      throw new Error("Invalid local photo path");
+    }
+
+    return target;
+  }
+
+  private contentTypeFor(key: string) {
+    const extension = key.split(".").pop()?.toLowerCase();
+    if (extension === "jpg" || extension === "jpeg") return "image/jpeg";
+    if (extension === "png") return "image/png";
+    if (extension === "webp") return "image/webp";
+    return "application/octet-stream";
+  }
+
   async save(key: string, bytes: Buffer, contentType: string) {
     try {
       if (this.driver === "s3")
@@ -39,9 +75,7 @@ export class PhotoStorageService {
           .file(key)
           .save(bytes, { contentType, resumable: false });
       else {
-        const target = resolve(this.localDir, key);
-        if (!target.startsWith(`${this.localDir}/`))
-          throw new Error("Invalid object key");
+        const target = this.localPath(key);
         await mkdir(dirname(target), { recursive: true });
         await writeFile(target, bytes, { flag: "wx" });
       }
@@ -70,11 +104,9 @@ export class PhotoStorageService {
           .download();
         return { bytes, contentType: `image/${key.split(".").pop()}` };
       }
-      const target = resolve(this.localDir, key);
-      if (!target.startsWith(`${this.localDir}/`))
-        throw new Error("Invalid object key");
+      const target = this.localPath(key);
       const bytes = await readFile(target);
-      return { bytes, contentType: `image/${key.split(".").pop()}` };
+      return { bytes, contentType: this.contentTypeFor(key) };
     } catch {
       throw new InternalServerErrorException("Photo could not be retrieved.");
     }

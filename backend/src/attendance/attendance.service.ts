@@ -120,7 +120,7 @@ export class AttendanceService {
       timestamp: a.timestamp,
       is_clock_in: a.is_clock_in,
       is_clock_out: a.is_clock_out,
-      evidence_url: `/api/attendances/${a.attendance_id}/photo`,
+      evidence_url: `/attendances/${a.attendance_id}/photo`,
     }));
   }
   async review() {
@@ -148,7 +148,7 @@ export class AttendanceService {
         attendance_longitude: Number(a.attendance_longitude),
         distance_from_home_m: Math.round(distance),
         outside_radius: isOutsideAttendanceRadius(distance),
-        evidence_url: `/api/attendances/${a.attendance_id}/photo`,
+        evidence_url: `/attendances/${a.attendance_id}/photo`,
       };
     });
   }

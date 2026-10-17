@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS attendances (
   evidence_photo_address VARCHAR(500) NOT NULL COMMENT 'Private object key or local storage path; not a public URL',
   attendance_longitude DECIMAL(10, 7) NOT NULL,
   attendance_latitude DECIMAL(10, 7) NOT NULL,
-  `timestamp` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `timestamp` DATETIME(3) NOT NULL,
   employee_id VARCHAR(36) NOT NULL,
   is_clock_in BOOLEAN NOT NULL DEFAULT FALSE,
   is_clock_out BOOLEAN NOT NULL DEFAULT FALSE,

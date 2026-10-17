@@ -16,7 +16,7 @@ Daymark is a full-stack attendance starter for remote teams. The API is NestJS +
 
 Requirements: Node.js 20+, npm, and Docker.
 
-1. Copy `.env.example` to `.env`. Set `JWT_SECRET` to a long random value. Keep `DB_SYNC=true` for the local starter database.
+1. Copy `backend/.env.example` to `backend/.env` and `frontend/.env.example` to `frontend/.env`. Set `JWT_SECRET` in `backend/.env` to a long random value. Keep `DB_SYNC=true` for the local starter database.
 2. Start MySQL with `docker compose up -d mysql`.
 3. Install the API and web dependencies separately:
 
@@ -24,7 +24,7 @@ Requirements: Node.js 20+, npm, and Docker.
    npm install --prefix backend
    npm install --prefix frontend
    ```
-4. Create the first HR account by setting these one-time values in `.env`:
+4. Create the first HR account by filling these one-time values in `backend/.env`:
 
    ```dotenv
    BOOTSTRAP_HR_NAME=Your Name
@@ -36,7 +36,7 @@ Requirements: Node.js 20+, npm, and Docker.
    BOOTSTRAP_HR_LONGITUDE=106.8456
    ```
 
-5. Run `npm run seed:hr`. Remove the `BOOTSTRAP_HR_*` secrets from `.env` after the account is created.
+5. Run `npm run seed:hr`. Remove the `BOOTSTRAP_HR_*` secrets from `backend/.env` after the account is created.
 6. Run `npm run dev` and open <http://localhost:5173>.
 
 Run `npm run build` to build both applications and `npm test` to run the backend attendance-distance and geofence tests. Backend and frontend dependencies are installed separately from their package directories, keeping `backend/node_modules` and `frontend/node_modules` independent.
@@ -51,7 +51,7 @@ The browser needs camera and location permission. Browsers only permit these API
 
 The TypeORM entities are in `backend/src/entities`. Set `DB_SYNC=false` in production and create/manage schema changes with migrations before deploying. `DB_SYNC=true` is intended only for local development. The API listens on port 3000 under `/api`.
 
-The matching MySQL 8 schema is in [`database/schema.sql`](database/schema.sql). You can create the database and tables with `mysql -u root -p < database/schema.sql`; change the database connection values in `.env` to match your MySQL setup. The SQL also inserts the employee and human-resources roles. The first HR employee account is created separately with the bootstrap instructions above.
+The matching MySQL 8 schema is in [`database/schema.sql`](database/schema.sql). You can create the database and tables with `mysql -u root -p < database/schema.sql`; change the database connection values in `backend/.env` to match your MySQL setup. The SQL also inserts the employee and human-resources roles. The first HR employee account is created separately with the bootstrap instructions above.
 
 - `POST /api/auth/login`
 - `GET /api/attendances/mine`

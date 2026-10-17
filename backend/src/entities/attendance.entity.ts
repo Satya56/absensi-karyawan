@@ -4,7 +4,6 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
-  CreateDateColumn,
 } from "typeorm";
 import { Employee } from "./employee.entity";
 
@@ -16,7 +15,7 @@ export class Attendance {
   attendance_longitude: number;
   @Column({ type: "decimal", precision: 10, scale: 7 })
   attendance_latitude: number;
-  @CreateDateColumn({ type: "datetime", precision: 3 }) timestamp: Date;
+  @Column({ type: "datetime", precision: 3 }) timestamp: Date;
   @Column({ type: "varchar", length: 36 }) employee_id: string;
   @Column({ type: "boolean", default: false }) is_clock_in: boolean;
   @Column({ type: "boolean", default: false }) is_clock_out: boolean;

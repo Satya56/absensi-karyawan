@@ -94,9 +94,54 @@ async function seed() {
     await db.destroy();
   }
 }
-seed().catch(() => {
-  process.stderr.write(
-    "HR bootstrap failed. Check required configuration and database availability.\n",
-  );
+seed().catch((error: unknown) => {
+  if (
+    error instanceof Error &&
+    error.message.startsWith("Set the bootstrap HR account fields")
+  ) {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const errorObject =
+    typeof error === "object" && error !== null
+      ? (error as {
+          code?: unknown;
+          driverError?: { code?: unknown; message?: unknown };
+          name?: unknown;
+        })
+      : undefined;
+  const possibleCode = errorObject?.code ?? errorObject?.driverError?.code;
+  const safeCode =
+    typeof possibleCode === "string" && /^[A-Z0-9_]+$/.test(possibleCode)
+      ? possibleCode
+      : undefined;
+  const databaseMessage = errorObject?.driverError?.message;
+  const invalidDefaultColumn =
+    safeCode === "ER_INVALID_DEFAULT" && typeof databaseMessage === "string"
+      ? /^Invalid default value for ['`]?([A-Za-z0-9_]+)['`]?$/.exec(
+          databaseMessage,
+        )?.[1]
+      : undefined;
+
+  if (safeCode) {
+    const detail = invalidDefaultColumn
+      ? ` MySQL rejected the default for the “${invalidDefaultColumn}” column.`
+      : "";
+    process.stderr.write(
+      `HR bootstrap failed with error code ${safeCode}.${detail} Check MySQL availability, the schema, and the DB_* values in backend/.env. No credentials or employee details were logged.\n`,
+    );
+  } else {
+    const errorName =
+      typeof errorObject?.name === "string" &&
+      /^[A-Za-z][A-Za-z0-9]*$/.test(errorObject.name)
+        ? errorObject.name
+        : "UnknownError";
+    process.stderr.write(
+      `HR bootstrap failed (${errorName}). Check backend/.env and the MySQL schema. No credentials or employee details were logged.\n`,
+    );
+  }
+
   process.exitCode = 1;
 });
