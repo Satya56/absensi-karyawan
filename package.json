@@ -1,18 +1,12 @@
 {
   "name": "work-from-home-attendance",
   "private": true,
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
   "scripts": {
-    "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": "npm --workspace backend run start:dev",
-    "dev:web": "npm --workspace frontend run dev",
-    "build": "npm run build --workspace backend && npm run build --workspace frontend",
-    "test": "npm test --workspace backend"
-  },
-  "devDependencies": {
-    "concurrently": "^9.1.2"
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "npm --prefix backend run start:dev",
+    "dev:web": "npm --prefix frontend run dev",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "test": "npm --prefix backend test",
+    "seed:hr": "npm --prefix backend run seed:hr"
   }
 }

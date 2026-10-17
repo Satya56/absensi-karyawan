@@ -18,7 +18,12 @@ Requirements: Node.js 20+, npm, and Docker.
 
 1. Copy `.env.example` to `.env`. Set `JWT_SECRET` to a long random value. Keep `DB_SYNC=true` for the local starter database.
 2. Start MySQL with `docker compose up -d mysql`.
-3. Install dependencies with `npm install`.
+3. Install the API and web dependencies separately:
+
+   ```bash
+   npm install --prefix backend
+   npm install --prefix frontend
+   ```
 4. Create the first HR account by setting these one-time values in `.env`:
 
    ```dotenv
@@ -31,10 +36,10 @@ Requirements: Node.js 20+, npm, and Docker.
    BOOTSTRAP_HR_LONGITUDE=106.8456
    ```
 
-5. Run `npm run seed:hr --workspace backend`. Remove the `BOOTSTRAP_HR_*` secrets from `.env` after the account is created.
+5. Run `npm run seed:hr`. Remove the `BOOTSTRAP_HR_*` secrets from `.env` after the account is created.
 6. Run `npm run dev` and open <http://localhost:5173>.
 
-Run `npm run build` to build both applications and `npm test` to run the backend attendance-distance and geofence tests.
+Run `npm run build` to build both applications and `npm test` to run the backend attendance-distance and geofence tests. Backend and frontend dependencies are installed separately from their package directories, keeping `backend/node_modules` and `frontend/node_modules` independent.
 
 The browser needs camera and location permission. Browsers only permit these APIs on `localhost` or a secure HTTPS origin.
 
