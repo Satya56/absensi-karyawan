@@ -1,6 +1,6 @@
-# Daymark — work from home attendance
+# HRIS — work from home attendance
 
-Daymark is a full-stack attendance starter for remote teams. The API is NestJS + TypeScript with TypeORM/MySQL, and the browser app is React + TypeScript.
+HRIS is a full-stack attendance starter for remote teams. The API is NestJS + TypeScript with TypeORM/MySQL, and the browser app is React + TypeScript.
 
 ## Included
 

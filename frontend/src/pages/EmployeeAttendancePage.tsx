@@ -455,7 +455,7 @@ export default function EmployeeAttendancePage({
               {locationIssue === "denied"
                 ? "Location access is blocked for this site. Change the site’s location permission, then try again."
                 : locationIssue === "unsupported"
-                  ? "This browser doesn’t support location sharing. Open Daymark in a current browser over HTTPS or localhost."
+                  ? "This browser doesn’t support location sharing. Open HRIS in a current browser over HTTPS or localhost."
                   : locationIssue === "unavailable"
                     ? "Your device couldn’t determine its location. Check that device location services are on, then try again."
                     : "Your browser will ask for permission to share your location. We use it only to verify this attendance check-in."}

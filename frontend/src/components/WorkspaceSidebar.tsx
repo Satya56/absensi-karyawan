@@ -34,7 +34,7 @@ export default function WorkspaceSidebar({
         <span className="brand-mark">
           <Activity size={18} />
         </span>{" "}
-        daymark
+        HRIS
       </div>
       <div className="workspace-label">WORKSPACE</div>
       <div className="workspace-pill">
