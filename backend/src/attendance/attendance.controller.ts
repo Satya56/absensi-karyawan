@@ -14,15 +14,17 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
-import { IsBoolean, IsNumber, Max, Min } from "class-validator";
+import { IsBoolean, IsNumber, IsOptional, Max, Min } from "class-validator";
 import { Transform, Type } from "class-transformer";
 import { Request, Response } from "express";
 import { AttendanceService } from "./attendance.service";
 import { JwtAuthGuard, Roles, RolesGuard } from "../auth/guards";
 
 class ClockDto {
-  @Type(() => Number) @IsNumber() @Min(-90) @Max(90) latitude: number;
-  @Type(() => Number) @IsNumber() @Min(-180) @Max(180) longitude: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(-90) @Max(90)
+  latitude?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(-180) @Max(180)
+  longitude?: number;
   @Transform(({ value }) =>
     value === true || value === "true"
       ? true

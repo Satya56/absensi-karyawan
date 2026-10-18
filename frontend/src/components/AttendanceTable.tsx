@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, Check, X } from "lucide-react";
+import { Camera, Check, MapPin } from "lucide-react";
 import type { Entry } from "../types/attendance";
 import { day, time } from "../lib/format";
 import AttendancePhotoDialog from "./AttendancePhotoDialog";
@@ -47,9 +47,17 @@ export default function AttendanceTable({ entries }: { entries: Entry[] }) {
                   {e.is_clock_in ? "Check in" : "Check out"}
                 </span>
               </td>
-              <td>{e.distance_from_home_m?.toLocaleString()} m</td>
               <td>
-                {e.outside_radius ? (
+                {e.location_unavailable || e.distance_from_home_m == null
+                  ? "Unavailable"
+                  : `${e.distance_from_home_m.toLocaleString()} m`}
+              </td>
+              <td>
+                {e.location_unavailable || e.distance_from_home_m == null ? (
+                  <span className="review-pill flagged">
+                    <MapPin size={12} /> Location unavailable
+                  </span>
+                ) : e.outside_radius ? (
                   <span className="review-pill flagged">
                     <span />
                     Outside 2 km

@@ -18,7 +18,9 @@ export default function HrDashboardPage({
   const present = new Set(
     today.filter((e) => e.is_clock_in).map((e) => e.employee_id),
   ).size;
-  const flags = today.filter((e) => e.outside_radius).length;
+  const flags = today.filter(
+    (e) => e.outside_radius || e.location_unavailable,
+  ).length;
   return (
     <>
       <div className="hr-summary">
@@ -53,7 +55,7 @@ export default function HrDashboardPage({
             </div>
           </div>
           <strong>{flags.toString().padStart(2, "0")}</strong>
-          <small>Outside the 2 km radius today</small>
+          <small>Outside radius or location unavailable today</small>
         </div>
       </div>
       <div className="section-title hr-section-title">

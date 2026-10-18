@@ -7,8 +7,9 @@ export type Entry = {
   timestamp: string;
   is_clock_in: boolean;
   is_clock_out: boolean;
-  distance_from_home_m?: number;
+  distance_from_home_m?: number | null;
   outside_radius?: boolean;
+  location_unavailable?: boolean;
   evidence_url: string;
 };
 export type Employee = {

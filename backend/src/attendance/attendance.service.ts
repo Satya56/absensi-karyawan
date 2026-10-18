@@ -55,11 +55,21 @@ export class AttendanceService {
   }
   async clock(
     employeeId: string,
-    dto: { latitude: number; longitude: number; is_clock_in: boolean },
+    dto: {
+      latitude?: number;
+      longitude?: number;
+      is_clock_in: boolean;
+    },
     file: Express.Multer.File,
   ) {
     if (dto.is_clock_in !== true && dto.is_clock_in !== false)
       throw new BadRequestException("Choose clock in or clock out.");
+    const hasLatitude = dto.latitude != null;
+    const hasLongitude = dto.longitude != null;
+    if (hasLatitude !== hasLongitude)
+      throw new BadRequestException(
+        "Provide both location coordinates or leave both unavailable.",
+      );
     const employee = await this.employees.findOne({
       where: { employee_id: employeeId },
     });
@@ -89,25 +99,29 @@ export class AttendanceService {
       attendance_id: id,
       employee_id: employeeId,
       evidence_photo_address: key,
-      attendance_latitude: dto.latitude,
-      attendance_longitude: dto.longitude,
+      attendance_latitude: dto.latitude ?? null,
+      attendance_longitude: dto.longitude ?? null,
+      location_unavailable: !hasLatitude,
       timestamp,
       is_clock_in: dto.is_clock_in,
       is_clock_out: !dto.is_clock_in,
     });
     await this.attendances.save(attendance);
-    const distance = distanceMeters(
-      Number(employee.address_latitude),
-      Number(employee.address_longitude),
-      dto.latitude,
-      dto.longitude,
-    );
+    const distance =
+      !hasLatitude || !hasLongitude
+        ? null
+        : distanceMeters(
+            Number(employee.address_latitude),
+            Number(employee.address_longitude),
+            dto.latitude!,
+            dto.longitude!,
+          );
     return {
       attendance_id: id,
       timestamp,
       is_clock_in: attendance.is_clock_in,
       is_clock_out: attendance.is_clock_out,
-      distance_from_home_m: Math.round(distance),
+      distance_from_home_m: distance === null ? null : Math.round(distance),
     };
   }
   async mine(employeeId: string) {
@@ -120,6 +134,7 @@ export class AttendanceService {
       timestamp: a.timestamp,
       is_clock_in: a.is_clock_in,
       is_clock_out: a.is_clock_out,
+      location_unavailable: a.location_unavailable,
       evidence_url: `/attendances/${a.attendance_id}/photo`,
     }));
   }
@@ -130,12 +145,18 @@ export class AttendanceService {
       take: 500,
     });
     return rows.map((a) => {
-      const distance = distanceMeters(
-        Number(a.employee.address_latitude),
-        Number(a.employee.address_longitude),
-        Number(a.attendance_latitude),
-        Number(a.attendance_longitude),
-      );
+      const locationUnavailable =
+        a.location_unavailable ||
+        a.attendance_latitude === null ||
+        a.attendance_longitude === null;
+      const distance = locationUnavailable
+        ? null
+        : distanceMeters(
+            Number(a.employee.address_latitude),
+            Number(a.employee.address_longitude),
+            Number(a.attendance_latitude),
+            Number(a.attendance_longitude),
+          );
       return {
         attendance_id: a.attendance_id,
         employee_id: a.employee_id,
@@ -144,10 +165,17 @@ export class AttendanceService {
         timestamp: a.timestamp,
         is_clock_in: a.is_clock_in,
         is_clock_out: a.is_clock_out,
-        attendance_latitude: Number(a.attendance_latitude),
-        attendance_longitude: Number(a.attendance_longitude),
-        distance_from_home_m: Math.round(distance),
-        outside_radius: isOutsideAttendanceRadius(distance),
+        attendance_latitude:
+          a.attendance_latitude === null
+            ? null
+            : Number(a.attendance_latitude),
+        attendance_longitude:
+          a.attendance_longitude === null
+            ? null
+            : Number(a.attendance_longitude),
+        location_unavailable: locationUnavailable,
+        distance_from_home_m: distance === null ? null : Math.round(distance),
+        outside_radius: distance === null ? false : isOutsideAttendanceRadius(distance),
         evidence_url: `/attendances/${a.attendance_id}/photo`,
       };
     });

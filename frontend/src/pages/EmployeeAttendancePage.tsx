@@ -33,6 +33,7 @@ export default function EmployeeAttendancePage({
   const [locationIssue, setLocationIssue] = useState<
     "denied" | "unavailable" | "unsupported" | null
   >(null);
+  const [proceedWithoutLocation, setProceedWithoutLocation] = useState(false);
   const [camera, setCamera] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -48,6 +49,7 @@ export default function EmployeeAttendancePage({
   function openLocationPrompt() {
     setError("");
     setLocationIssue(null);
+    setProceedWithoutLocation(false);
     setShowLocationPrompt(true);
   }
   function locate() {
@@ -63,6 +65,7 @@ export default function EmployeeAttendancePage({
           latitude: p.coords.latitude,
           longitude: p.coords.longitude,
         });
+        setProceedWithoutLocation(false);
         setLocating(false);
         setShowLocationPrompt(false);
       },
@@ -120,14 +123,16 @@ export default function EmployeeAttendancePage({
     setCamera(false);
   }
   async function submit(clockIn: boolean) {
-    if (!coords || !captured) return;
+    if ((!coords && !proceedWithoutLocation) || !captured) return;
     setBusy(true);
     setError("");
     try {
       const data = new FormData();
       data.append("photo", captured, `selfie-${Date.now()}.jpg`);
-      data.append("latitude", String(coords.latitude));
-      data.append("longitude", String(coords.longitude));
+      if (coords) {
+        data.append("latitude", String(coords.latitude));
+        data.append("longitude", String(coords.longitude));
+      }
       data.append("is_clock_in", String(clockIn));
       await request("/attendances/clock", { method: "POST", body: data });
       setCaptured(null);
@@ -307,7 +312,7 @@ export default function EmployeeAttendancePage({
           </div>
           <div className="check-steps">
             <button
-              className={`step-row ${coords ? "complete" : ""}`}
+              className={`step-row ${coords || proceedWithoutLocation ? "complete" : ""}`}
               onClick={openLocationPrompt}
               disabled={locating || checkedOut}
             >
@@ -325,10 +330,12 @@ export default function EmployeeAttendancePage({
                 <small>
                   {coords
                     ? "Location captured for this check-in"
-                    : "Used only to verify your check-in"}
+                    : proceedWithoutLocation
+                      ? "HR will review this attendance without a location"
+                      : "Used only to verify your check-in"}
                 </small>
               </span>
-              {coords ? (
+              {coords || proceedWithoutLocation ? (
                 <Check className="step-check" size={17} />
               ) : (
                 <ArrowUpRight className="step-arrow" size={16} />
@@ -387,7 +394,12 @@ export default function EmployeeAttendancePage({
           {error && <div className="error-note compact">{error}</div>}
           <button
             className="button primary full check-submit"
-            disabled={!coords || !captured || busy || checkedOut}
+            disabled={
+              (!coords && !proceedWithoutLocation) ||
+              !captured ||
+              busy ||
+              checkedOut
+            }
             onClick={() => void submit(clockMode)}
           >
             {busy
@@ -400,7 +412,7 @@ export default function EmployeeAttendancePage({
             {!checkedOut && <ArrowUpRight size={17} />}
           </button>
           <div className="check-privacy">
-            <ShieldCheck size={14} /> Your photo and location are shared with HR
+            <ShieldCheck size={14} /> Your photo and attendance details are shared with HR
           </div>
         </section>
         <section className="quote-card">
@@ -485,6 +497,18 @@ export default function EmployeeAttendancePage({
                       ? "Try again"
                       : "Enable location"}
                   {!locating && <ArrowUpRight size={16} />}
+                </button>
+              )}
+              {locationIssue && (
+                <button
+                  className="button secondary"
+                  onClick={() => {
+                    setProceedWithoutLocation(true);
+                    setCoords(null);
+                    setShowLocationPrompt(false);
+                  }}
+                >
+                  Continue without location
                 </button>
               )}
             </div>

@@ -53,8 +53,9 @@ CREATE TABLE IF NOT EXISTS employee_roles (
 CREATE TABLE IF NOT EXISTS attendances (
   attendance_id VARCHAR(36) NOT NULL,
   evidence_photo_address VARCHAR(500) NOT NULL COMMENT 'Private object key or local storage path; not a public URL',
-  attendance_longitude DECIMAL(10, 7) NOT NULL,
-  attendance_latitude DECIMAL(10, 7) NOT NULL,
+  attendance_longitude DECIMAL(10, 7) NULL,
+  attendance_latitude DECIMAL(10, 7) NULL,
+  location_unavailable BOOLEAN NOT NULL DEFAULT FALSE,
   `timestamp` DATETIME(3) NOT NULL,
   employee_id VARCHAR(36) NOT NULL,
   is_clock_in BOOLEAN NOT NULL DEFAULT FALSE,
@@ -62,9 +63,11 @@ CREATE TABLE IF NOT EXISTS attendances (
   PRIMARY KEY (attendance_id),
   KEY idx_attendances_employee_timestamp (employee_id, `timestamp`),
   CONSTRAINT chk_attendances_longitude
-    CHECK (attendance_longitude >= -180 AND attendance_longitude <= 180),
+    CHECK (attendance_longitude IS NULL OR (attendance_longitude >= -180 AND attendance_longitude <= 180)),
   CONSTRAINT chk_attendances_latitude
-    CHECK (attendance_latitude >= -90 AND attendance_latitude <= 90),
+    CHECK (attendance_latitude IS NULL OR (attendance_latitude >= -90 AND attendance_latitude <= 90)),
+  CONSTRAINT chk_attendances_location_pair
+    CHECK ((attendance_latitude IS NULL) = (attendance_longitude IS NULL)),
   CONSTRAINT chk_attendances_clock_action
     CHECK (is_clock_in <> is_clock_out),
   CONSTRAINT fk_attendances_employee

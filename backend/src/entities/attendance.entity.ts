@@ -11,10 +11,11 @@ import { Employee } from "./employee.entity";
 export class Attendance {
   @PrimaryColumn({ type: "varchar", length: 36 }) attendance_id: string;
   @Column({ type: "varchar", length: 500 }) evidence_photo_address: string;
-  @Column({ type: "decimal", precision: 10, scale: 7 })
-  attendance_longitude: number;
-  @Column({ type: "decimal", precision: 10, scale: 7 })
-  attendance_latitude: number;
+  @Column({ type: "decimal", precision: 10, scale: 7, nullable: true })
+  attendance_longitude: number | null;
+  @Column({ type: "decimal", precision: 10, scale: 7, nullable: true })
+  attendance_latitude: number | null;
+  @Column({ type: "boolean", default: false }) location_unavailable: boolean;
   @Column({ type: "datetime", precision: 3 }) timestamp: Date;
   @Column({ type: "varchar", length: 36 }) employee_id: string;
   @Column({ type: "boolean", default: false }) is_clock_in: boolean;

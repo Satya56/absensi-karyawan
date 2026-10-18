@@ -51,11 +51,11 @@ The browser needs camera and location permission. Browsers only permit these API
 
 The TypeORM entities are in `backend/src/entities`. Set `DB_SYNC=false` in production and create/manage schema changes with migrations before deploying. `DB_SYNC=true` is intended only for local development. The API listens on port 3000 under `/api`.
 
-The matching MySQL 8 schema is in [`database/schema.sql`](database/schema.sql). You can create the database and tables with `mysql -u root -p < database/schema.sql`; change the database connection values in `backend/.env` to match your MySQL setup. The SQL also inserts the employee and human-resources roles. The first HR employee account is created separately with the bootstrap instructions above.
+The matching MySQL 8 schema is in [`database/schema.sql`](database/schema.sql). You can create the database and tables with `mysql -u root -p < database/schema.sql`; change the database connection values in `backend/.env` to match your MySQL setup. The SQL also inserts the employee and human-resources roles. The first HR employee account is created separately with the bootstrap instructions above. Existing databases should apply [`20261019_allow_attendance_without_location.sql`](database/migrations/20261019_allow_attendance_without_location.sql) before deploying the application update.
 
 - `POST /api/auth/login`
 - `GET /api/attendances/mine`
-- `POST /api/attendances/clock` (multipart `photo`, `latitude`, `longitude`, `is_clock_in`)
+- `POST /api/attendances/clock` (multipart `photo`, optional `latitude` and `longitude` together, `is_clock_in`; missing location is flagged for HR review)
 - `GET /api/attendances/review` (HR only)
 - `GET /api/attendances/:id/photo` (record owner or HR)
 - `GET /api/employees`, `POST /api/employees`, `PUT /api/employees/:id` (HR only)
