@@ -16,9 +16,13 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
 import { IsBoolean, IsNumber, IsOptional, Max, Min } from "class-validator";
 import { Transform, Type } from "class-transformer";
-import { Request, Response } from "express";
+import { Response } from "express";
 import { AttendanceService } from "./attendance.service";
 import { JwtAuthGuard, Roles, RolesGuard } from "../auth/guards";
+import {
+  logOperationalEvent,
+  RequestWithId,
+} from "../common/operational-logging";
 
 class ClockDto {
   @IsOptional() @Type(() => Number) @IsNumber() @Min(-90) @Max(90)
@@ -35,7 +39,9 @@ class ClockDto {
   @IsBoolean()
   is_clock_in: boolean;
 }
-type AuthedRequest = Request & { user: { employee_id: string; role: string } };
+type AuthedRequest = RequestWithId & {
+  user: { employee_id: string; role: string };
+};
 @Controller("attendances")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AttendanceController {
@@ -56,13 +62,27 @@ export class AttendanceController {
     @UploadedFile() photo?: Express.Multer.File,
   ) {
     if (!photo) throw new BadRequestException("A selfie photo is required.");
-    return this.attendance.clock(req.user.employee_id, dto, photo);
+    const result = await this.attendance.clock(req.user.employee_id, dto, photo);
+    logOperationalEvent("info", "attendance.clock.recorded", {
+      request_id: req.requestId ?? "unavailable",
+    });
+    return result;
   }
-  @Get("mine") mine(@Req() req: AuthedRequest) {
-    return this.attendance.mine(req.user.employee_id);
+  @Get("mine") async mine(@Req() req: AuthedRequest) {
+    const result = await this.attendance.mine(req.user.employee_id);
+    logOperationalEvent("info", "attendance.mine.listed", {
+      request_id: req.requestId ?? "unavailable",
+    });
+    return result;
   }
-  @Get("review") @Roles("human-resources") review() {
-    return this.attendance.review();
+  @Get("review")
+  @Roles("human-resources")
+  async review(@Req() req: AuthedRequest) {
+    const result = await this.attendance.review();
+    logOperationalEvent("info", "attendance.review.listed", {
+      request_id: req.requestId ?? "unavailable",
+    });
+    return result;
   }
   @Get(":id/photo")
   async photo(
@@ -75,6 +95,9 @@ export class AttendanceController {
       req.user.employee_id,
       req.user.role,
     );
+    logOperationalEvent("info", "attendance.photo.served", {
+      request_id: req.requestId ?? "unavailable",
+    });
     res.setHeader("Content-Type", result.contentType);
     res.setHeader("Cache-Control", "private, no-store");
     res.send(result.bytes);

@@ -5,6 +5,7 @@ import {
   Post,
   Put,
   Param,
+  Req,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -21,6 +22,7 @@ import {
 import { Type } from "class-transformer";
 import { EmployeesService } from "./employees.service";
 import { JwtAuthGuard, Roles, RolesGuard } from "../auth/guards";
+import { logOperationalEvent, RequestWithId } from "../common/operational-logging";
 
 class EmployeeDto {
   @IsString() @MinLength(2) name: string;
@@ -42,13 +44,29 @@ class EmployeeDto {
 @Roles("human-resources")
 export class EmployeesController {
   constructor(private employees: EmployeesService) {}
-  @Get() list() {
-    return this.employees.list();
+  @Get() async list(@Req() req: RequestWithId) {
+    const result = await this.employees.list();
+    logOperationalEvent("info", "employee.list.completed", {
+      request_id: req.requestId ?? "unavailable",
+    });
+    return result;
   }
-  @Post() create(@Body() dto: EmployeeDto) {
-    return this.employees.create(dto);
+  @Post() async create(@Body() dto: EmployeeDto, @Req() req: RequestWithId) {
+    const result = await this.employees.create(dto);
+    logOperationalEvent("info", "employee.create.completed", {
+      request_id: req.requestId ?? "unavailable",
+    });
+    return result;
   }
-  @Put(":id") update(@Param("id") id: string, @Body() dto: EmployeeDto) {
-    return this.employees.update(id, dto);
+  @Put(":id") async update(
+    @Param("id") id: string,
+    @Body() dto: EmployeeDto,
+    @Req() req: RequestWithId,
+  ) {
+    const result = await this.employees.update(id, dto);
+    logOperationalEvent("info", "employee.update.completed", {
+      request_id: req.requestId ?? "unavailable",
+    });
+    return result;
   }
 }

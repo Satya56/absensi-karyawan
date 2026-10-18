@@ -10,7 +10,7 @@ HRIS is a full-stack attendance starter for remote teams. The API is NestJS + Ty
 - HR review tag when a submission is more than 2 km from the employee’s registered home coordinates.
 - Private photo storage on local disk, AWS S3, or Google Cloud Storage.
 - `employees`, `attendances`, `roles`, and `employee_roles` tables with foreign keys. Each employee has a `role_id` and one unique employee-role link; HR updates keep the two role references aligned.
-- No request-body, SQL, or employee-data logging. Framework logging is disabled, TypeORM query logging is off, errors returned to clients are sanitized, and photos are served only through an authenticated endpoint.
+- Privacy-safe operational request and processing logs use opaque request IDs and event codes. Request bodies, SQL, and employee data are not logged; TypeORM query logging is off, errors returned to clients are sanitized, and photos are served only through an authenticated endpoint.
 
 ## Run locally
 
@@ -62,4 +62,4 @@ The matching MySQL 8 schema is in [`database/schema.sql`](database/schema.sql). 
 
 ## Privacy notes
 
-Authentication and authorization never write employee values to logs. Do not add logging of request bodies, passwords, addresses, exact coordinates, uploaded file names, or object keys. Logs should contain only operational event codes and opaque request IDs. In production, use HTTPS, a private object bucket, secret-manager credentials, database backups with restricted access, regular dependency updates, and TypeORM migrations.
+Authentication and authorization never write employee values to logs. Backend logs record the request ID, HTTP method, controller operation, response status, duration, and fixed processing event codes. Successful events use `info`, client-side failures use `warn`, and server-side failures use `error`. Do not add logging of request bodies, passwords, addresses, exact coordinates, uploaded file names, employee or attendance IDs, or object keys. In production, use HTTPS, a private object bucket, secret-manager credentials, database backups with restricted access, regular dependency updates, and TypeORM migrations.
